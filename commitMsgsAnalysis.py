@@ -21,7 +21,6 @@ from nltk.stem.lancaster import LancasterStemmer
 
 import operator
 import xlsxwriter
-import re
 
 def tokenizeText(text):
     return sent_tokenize(text)
@@ -47,7 +46,7 @@ def findStemWordsFreequency(words):
     return FreqDist(stemmedWords)
 
 def findMostUsed(col):
-    return sorted(dict(col).items(), key=operator.itemgetter(1), reverse=True)[:10]
+    return sorted(dict(col).items(), key=operator.itemgetter(1), reverse=True)[:5]
 
 def findTotalMerges(msgs):
     c = 0
@@ -59,27 +58,58 @@ def findTotalMerges(msgs):
 
 
 def appStats(app):
-    res = pd.read_excel('commits/' + app + '.xlsx', 'Sheet1')
+    res = pd.read_excel('C:/1My/study/project/TicketAnalysis/commits/' + app + '.xlsx', 'Sheet1')
     table = res.groupby(['month']).agg({'name':len})
     totalMerges = findTotalMerges(res['comments'])
     totalCommits = len(res)
-
-def appCommentsAnalysis(app):
-    res = pd.read_excel('commits/' + app + '.xlsx', 'Sheet1')
-    msgs = ''
-    for index, d, n, c in res.itertuples():
-        msgs += c
-
-    sents = tokenizeText(msgs)    
-    word_sent = tokenizeSentences(msgs, app)
+    (bi, tri) = appCommentsAnalysis(app, res)
     
+    writeToExcel(app, table, totalMerges, totalCommits, bi, tri)
+    
+def writeToExcel(app, table, merges, commits, bi, tri):   
+    workbook = xlsxwriter.Workbook('C:/1My/study/project/TicketAnalysis/commits/' + app + 'stats.xlsx')
+    worksheet = workbook.add_worksheet()
+    
+    worksheet.write(0, 0, 'app')
+    worksheet.write(0, 1, 'Jan')
+    worksheet.write(0, 2, 'Feb')
+    worksheet.write(0, 3, 'Mar')
+    worksheet.write(0, 4, 'Apr')
+    worksheet.write(0, 5, 'Merges')
+    worksheet.write(0, 6, 'Commits')
+    worksheet.write(0, 7, 'Tri')
+    
+    worksheet.write(1, 0, 'app')
+    
+    for rec in table.itertuples():
+        month, count = rec
+        worksheet.write(1, month, count)    
+        
+    worksheet.write(1, 5, merges)
+    worksheet.write(1, 6, commits)
+    worksheet.write(1, 7, tri)
+        
+    workbook.close()
+    
+def joinListItems(l):
+    mapFirstEle = map(lambda x: x[0], l)
+    newList = list(mapFirstEle)
+    return ''.join(str(newList))
+
+def appCommentsAnalysis(app, res):
+    msgs = ''
+    for index, d, n, c, m in res.itertuples():
+        msgs += c
+        
+    word_sent = tokenizeSentences(msgs, app)    
     bigram = findSortedBigrams(word_sent)
     trigram = findSortedTrigrams(word_sent)
-    freq = findStemWordsFreequency(word_sent)
     
-    mostUsed = findMostUsed(freq)
     mostUsedBigram = findMostUsed(bigram)
     mostUsedTrigram = findMostUsed(trigram)
+    
+    
+    return (joinListItems(mostUsedBigram), joinListItems(mostUsedTrigram))
 
 
 '''res.groupby(['date']).agg({'name':len})'''

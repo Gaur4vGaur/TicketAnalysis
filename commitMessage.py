@@ -31,7 +31,7 @@ def writeToExcel(app, msgs):
     row = 1
     col = 0
     
-    workbook = xlsxwriter.Workbook('commits/' + app + '.xlsx')
+    workbook = xlsxwriter.Workbook('C:/1My/study/project/TicketAnalysis/commits/' + app + '.xlsx')
     worksheet = workbook.add_worksheet()
     
     worksheet.write(0, 0, 'date')
@@ -63,3 +63,5 @@ def commitsForYear(app, appUrl):
         
     writeToExcel(app, messages)
     return messages
+
+
