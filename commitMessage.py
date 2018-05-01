@@ -11,11 +11,18 @@ import xlsxwriter
 '''pd.read_json('https://api.github.com/repos/hmrc/tai/commits')'''
 
 def commitMessages(url):
-    json = pd.read_json(url)
+    json = None
+    
+    try:
+        json = pd.read_json(url)
+    except:
+        json = None
+        
+
     messages = []
     isPreviousYear = False
     
-    if(json.empty):
+    if(json is not None or json.empty):
         return (messages, True)
     
     for key, value in json['commit'].items():
@@ -31,7 +38,7 @@ def writeToExcel(app, msgs):
     row = 1
     col = 0
     
-    workbook = xlsxwriter.Workbook('C:/1My/study/project/TicketAnalysis/commits/' + app + '.xlsx')
+    workbook = xlsxwriter.Workbook('commits/' + app + '.xlsx')
     worksheet = workbook.add_worksheet()
     
     worksheet.write(0, 0, 'date')
@@ -63,5 +70,4 @@ def commitsForYear(app, appUrl):
         
     writeToExcel(app, messages)
     return messages
-
 

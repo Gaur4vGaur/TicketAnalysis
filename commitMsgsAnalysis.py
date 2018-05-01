@@ -27,9 +27,9 @@ def tokenizeText(text):
 
 def tokenizeSentences(text, app):
     word_sent = word_tokenize(text.lower())
-    _stopwords = set(stopwords.words('english') + list(punctuation) + ['merge', app, 'pull', 'request', 'branch', 'master'])
+    _stopwords = set(stopwords.words('english') + list(punctuation) + ['merge', app, 'pull', 'request', 'branch', 'master', 'ddcnls', 'ddcnls', '/'])
     
-    word_sent=[word for word in word_sent if word not in _stopwords]
+    word_sent=[w for w in word_sent if not w in _stopwords and not 'hmrc' in w and not 'ddcn' in w]
     return word_sent
 
 def findSortedBigrams(words):
@@ -58,16 +58,26 @@ def findTotalMerges(msgs):
 
 
 def appStats(app):
-    res = pd.read_excel('C:/1My/study/project/TicketAnalysis/commits/' + app + '.xlsx', 'Sheet1')
+    res = None
+    
+    try:
+        res = pd.read_excel('commits/msgs/' + app + '.xlsx', 'Sheet1')
+    except:
+        res = None
+    
+    if(res is None):
+        print('no data for ' + app)
+        return
+        
     table = res.groupby(['month']).agg({'name':len})
     totalMerges = findTotalMerges(res['comments'])
     totalCommits = len(res)
     (bi, tri) = appCommentsAnalysis(app, res)
     
-    writeToExcel(app, table, totalMerges, totalCommits, bi, tri)
+    return (app, table, totalMerges, totalCommits, bi, tri)
     
 def writeToExcel(app, table, merges, commits, bi, tri):   
-    workbook = xlsxwriter.Workbook('C:/1My/study/project/TicketAnalysis/commits/' + app + 'stats.xlsx')
+    workbook = xlsxwriter.Workbook('commits/' + app + 'stats.xlsx')
     worksheet = workbook.add_worksheet()
     
     worksheet.write(0, 0, 'app')
